@@ -45,8 +45,6 @@ class FOFcoEditor {
         if (document.getElementById('fofco-exact-styles')) return;
         const style = document.createElement('style');
         style.id = 'fofco-exact-styles';
-        // এখানে তোমার fofco-editor.html এর 100% হুবহু CSS ব্যবহার করা হয়েছে
-        // শুধু তোমার মেইন সাইট যাতে না ভাঙে, তাই সব ক্লাসের আগে .fofco-wrapper বসিয়েছি।
         style.innerHTML = `
             .fofco-wrapper {
                 --primary: #2563eb;
@@ -63,7 +61,6 @@ class FOFcoEditor {
                 position: relative;
             }
 
-            /* 🔥 FIX: FontAwesome আইকন যাতে না ভাঙে তার জন্য font-family রিমুভ করা হয়েছে */
             .fofco-wrapper * { box-sizing: border-box; }
 
             .fofco-wrapper .editor-container { max-width: 1100px; margin: 0 auto; background: var(--bg-editor); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; position: relative; }
@@ -110,6 +107,15 @@ class FOFcoEditor {
             .fofco-wrapper .native-color-picker { opacity: 0; position: absolute; width: 0; height: 0; pointer-events: none; }
             
             .fofco-wrapper .editor-area { min-height: 550px; padding: 40px 60px; outline: none; line-height: 1.7; font-size: 16px; overflow-y: auto; color: #1e293b; }
+            
+            /* 🔥 TRUE PLACEHOLDER CSS */
+            .fofco-wrapper .editor-area:empty::before {
+                content: attr(data-placeholder);
+                color: #94a3b8;
+                pointer-events: none;
+                display: block;
+            }
+
             .fofco-wrapper .editor-area ul, .fofco-wrapper .editor-area ol { margin-left: 35px !important; padding-left: 5px !important; margin-bottom: 1em; }
             .fofco-wrapper .editor-area li { margin-bottom: 8px; }
             .fofco-wrapper .editor-area h1, .fofco-wrapper .editor-area h2, .fofco-wrapper .editor-area h3, .fofco-wrapper .editor-area h4 { font-weight: 600; color: #0f172a; margin: 1.2em 0 0.5em 0; }
@@ -133,7 +139,7 @@ class FOFcoEditor {
             .fofco-wrapper .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
             .fofco-wrapper .modal-box { background: #fff; padding: 30px; border-radius: 16px; box-shadow: var(--shadow-lg); width: 420px; }
             .fofco-wrapper .modal-box h3 { margin-bottom: 20px; font-size: 18px; color: #0f172a; font-weight: 600; }
-            .fofco-editor-wrapper .modal-box input[type="text"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; outline: none; font-family: inherit; }
+            .fofco-wrapper .modal-box input[type="text"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; outline: none; font-family: inherit; }
             .fofco-wrapper .modal-box input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
             .fofco-wrapper .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
             .fofco-wrapper .btn-primary { background: var(--primary); color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 500; cursor: pointer; font-family: inherit;}
@@ -151,134 +157,135 @@ class FOFcoEditor {
     }
 
     injectHTML() {
-        // তোমার আপলোড করা fofco-editor.html ফাইলের 100% হুবহু HTML কোড
         this.container.innerHTML = `
         <div class="fofco-wrapper">
-            <div class="modal-overlay" id="link-modal">
+            <!-- LINK MODAL -->
+            <div class="modal-overlay" id="fof-link-modal">
               <div class="modal-box">
                 <h3>Insert/Edit Link</h3>
-                <input type="text" id="link-url-input" placeholder="https://example.com" />
+                <input type="text" id="fof-link-url-input" placeholder="https://example.com" />
                 <div class="modal-actions">
-                  <button class="btn-danger" onclick="ModalManager.removeLink()">Remove</button>
-                  <button class="btn-secondary" onclick="ModalManager.close('link-modal')">Cancel</button>
-                  <button class="btn-primary" onclick="ModalManager.applyLink()">Apply Link</button>
+                  <button class="btn-danger" id="fof-remove-link">Remove</button>
+                  <button class="btn-secondary" id="fof-close-link-btn">Cancel</button>
+                  <button class="btn-primary" id="fof-apply-link">Apply Link</button>
                 </div>
               </div>
             </div>
 
-            <div class="modal-overlay" id="media-modal">
+            <!-- MEDIA MODAL -->
+            <div class="modal-overlay" id="fof-media-modal">
               <div class="modal-box">
                 <h3>Insert Media</h3>
-                <input type="text" id="media-url-input" placeholder="Image or Video URL..." />
+                <input type="text" id="fof-media-url-input" placeholder="Image or Video URL..." />
                 <div style="text-align: center; margin-bottom: 15px; color: var(--text-muted); font-size: 13px; font-weight: 500;">OR</div>
-                <div class="modal-dropzone" id="media-dropzone" onclick="document.getElementById('modal-file-input').click()">
+                <div class="modal-dropzone" id="fof-media-dropzone">
                   <i class="fas fa-cloud-upload-alt"></i>
                   <p>Drag & Drop here or <b>Browse Files</b></p>
-                  <input type="file" id="modal-file-input" accept="image/*,video/*" onchange="ModalManager.handleFileInput(event)" />
+                  <input type="file" id="fof-modal-file-input" accept="image/*,video/*" style="display:none;">
                 </div>
                 <div class="modal-actions">
-                  <button class="btn-secondary" onclick="ModalManager.close('media-modal')">Cancel</button>
-                  <button class="btn-primary" onclick="ModalManager.applyMediaUrl()">Insert</button>
+                  <button class="btn-secondary" id="fof-close-media-btn">Cancel</button>
+                  <button class="btn-primary" id="fof-apply-media">Insert</button>
                 </div>
               </div>
             </div>
 
             <div class="editor-container">
-              <div id="img-toolbar" class="img-toolbar">
-                <button onmousedown="event.preventDefault()" onclick="ImgManager.align('left')" title="Wrap Left"><i class="fas fa-align-left"></i></button>
-                <button onmousedown="event.preventDefault()" onclick="ImgManager.align('none')" title="Center (No Wrap)"><i class="fas fa-align-center"></i></button>
-                <button onmousedown="event.preventDefault()" onclick="ImgManager.align('right')" title="Wrap Right"><i class="fas fa-align-right"></i></button>
+              <div id="fof-img-toolbar" class="img-toolbar">
+                <button data-align="left" title="Wrap Left"><i class="fas fa-align-left"></i></button>
+                <button data-align="none" title="Center (No Wrap)"><i class="fas fa-align-center"></i></button>
+                <button data-align="right" title="Wrap Right"><i class="fas fa-align-right"></i></button>
               </div>
-              <div id="img-resizer" class="img-resizer"></div>
+              <div id="fof-img-resizer" class="img-resizer"></div>
 
               <div class="toolbar">
-                <div class="dropdown-wrapper" id="font-dropdown">
-                  <button class="tool-btn" onmousedown="event.preventDefault()" onclick="toggleDropdown('font-dropdown')" style="width: 140px; justify-content: space-between; border: 1px solid var(--border);">
-                    <span id="active-font">Roboto</span>
+                <div class="dropdown-wrapper" id="fof-font-dropdown">
+                  <button class="tool-btn fof-dd-btn" data-target="fof-font-dropdown" style="width: 140px; justify-content: space-between; border: 1px solid var(--border);">
+                    <span id="fof-active-font">Roboto</span>
                     <i class="fas fa-chevron-down" style="font-size: 12px"></i>
                   </button>
                   <div class="dropdown-menu">
                     <div class="font-search-box">
-                      <input type="text" id="font-input" placeholder="Search Font..." onkeypress="if (event.key === 'Enter') FontManager.fetchFont();" />
-                      <button onmousedown="event.preventDefault()" onclick="FontManager.fetchFont()"><i class="fas fa-search"></i></button>
+                      <input type="text" id="fof-font-input" placeholder="Search Font..." />
+                      <button id="fof-font-search-btn"><i class="fas fa-search"></i></button>
                     </div>
                     <div class="font-section">Recent Fonts</div>
-                    <div class="font-list" id="recent-fonts"></div>
+                    <div class="font-list" id="fof-recent-fonts"></div>
                   </div>
                 </div>
 
                 <div class="divider"></div>
 
                 <div class="font-size-control">
-                  <button onmousedown="event.preventDefault()" onclick="changeFontSize(-1)" title="Decrease font size"><i class="fas fa-minus" style="font-size: 10px"></i></button>
-                  <input type="number" id="font-size-input" value="16" min="1" max="200" onchange="applyDirectFontSize(this.value)" onmousedown="event.stopPropagation()" onkeydown="if (event.key === 'Enter') { event.preventDefault(); applyDirectFontSize(this.value); editor.focus(); }" title="Font Size" />
-                  <button onmousedown="event.preventDefault()" onclick="changeFontSize(1)" title="Increase font size"><i class="fas fa-plus" style="font-size: 10px"></i></button>
+                  <button id="fof-size-dec" title="Decrease font size"><i class="fas fa-minus" style="font-size: 10px"></i></button>
+                  <input type="number" id="fof-font-size-input" value="16" min="1" max="200" title="Font Size" />
+                  <button id="fof-size-inc" title="Increase font size"><i class="fas fa-plus" style="font-size: 10px"></i></button>
                 </div>
 
                 <div class="divider"></div>
 
-                <div class="dropdown-wrapper" id="format-dropdown">
-                  <button class="tool-btn" onmousedown="event.preventDefault()" onclick="toggleDropdown('format-dropdown')" style="width: 125px; justify-content: space-between">
-                    <span id="active-format">Paragraph</span>
+                <div class="dropdown-wrapper" id="fof-format-dropdown">
+                  <button class="tool-btn fof-dd-btn" data-target="fof-format-dropdown" style="width: 125px; justify-content: space-between">
+                    <span id="fof-active-format">Paragraph</span>
                     <i class="fas fa-chevron-down" style="font-size: 12px"></i>
                   </button>
-                  <div class="dropdown-menu list-menu">
-                    <button onmousedown="event.preventDefault()" onclick="applyFormat('P', 'Paragraph')">Paragraph</button>
-                    <button onmousedown="event.preventDefault()" onclick="applyFormat('H1', 'Heading 1')" style="font-size: 22px; font-weight: 600">Heading 1</button>
-                    <button onmousedown="event.preventDefault()" onclick="applyFormat('H2', 'Heading 2')" style="font-size: 18px; font-weight: 600">Heading 2</button>
-                    <button onmousedown="event.preventDefault()" onclick="applyFormat('H3', 'Heading 3')" style="font-size: 16px; font-weight: 600">Heading 3</button>
+                  <div class="dropdown-menu list-menu" id="fof-format-list">
+                    <button data-tag="P" data-name="Paragraph">Paragraph</button>
+                    <button data-tag="H1" data-name="Heading 1" style="font-size: 22px; font-weight: 600">Heading 1</button>
+                    <button data-tag="H2" data-name="Heading 2" style="font-size: 18px; font-weight: 600">Heading 2</button>
+                    <button data-tag="H3" data-name="Heading 3" style="font-size: 16px; font-weight: 600">Heading 3</button>
                   </div>
                 </div>
 
                 <div class="divider"></div>
 
-                <button class="tool-btn" id="btn-bold" onmousedown="event.preventDefault()" onclick="formatDoc('bold')" title="Bold"><i class="fas fa-bold"></i></button>
-                <button class="tool-btn" id="btn-italic" onmousedown="event.preventDefault()" onclick="formatDoc('italic')" title="Italic"><i class="fas fa-italic"></i></button>
-                <button class="tool-btn" id="btn-underline" onmousedown="event.preventDefault()" onclick="formatDoc('underline')" title="Underline"><i class="fas fa-underline"></i></button>
-                <button class="tool-btn" id="btn-strikeThrough" onmousedown="event.preventDefault()" onclick="formatDoc('strikeThrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="applyOverline()" title="Aboveline"><i class="fas fa-overline"></i>A&#773;</button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-bold" data-cmd="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-italic" data-cmd="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-underline" data-cmd="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-strikeThrough" data-cmd="strikeThrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                <button class="tool-btn" id="fof-btn-overline" title="Aboveline"><i class="fas fa-overline"></i>A&#773;</button>
 
                 <div class="divider"></div>
 
-                <div class="dropdown-wrapper" id="color-dropdown">
-                  <button class="tool-btn" onmousedown="event.preventDefault()" onclick="toggleDropdown('color-dropdown')" title="Text Color">
-                    <i class="fas fa-font" id="color-icon"></i>
+                <div class="dropdown-wrapper" id="fof-color-dropdown">
+                  <button class="tool-btn fof-dd-btn" data-target="fof-color-dropdown" title="Text Color">
+                    <i class="fas fa-font" id="fof-color-icon"></i>
                     <i class="fas fa-caret-down" style="font-size: 12px"></i>
                   </button>
                   <div class="dropdown-menu color-panel">
-                    <div class="color-grid">
-                      <div class="color-btn" style="background: #000000" onmousedown="event.preventDefault()" onclick="applyTextColor('#000000')"></div>
-                      <div class="color-btn" style="background: #475569" onmousedown="event.preventDefault()" onclick="applyTextColor('#475569')"></div>
-                      <div class="color-btn" style="background: #ef4444" onmousedown="event.preventDefault()" onclick="applyTextColor('#ef4444')"></div>
-                      <div class="color-btn" style="background: #f97316" onmousedown="event.preventDefault()" onclick="applyTextColor('#f97316')"></div>
-                      <div class="color-btn" style="background: #eab308" onmousedown="event.preventDefault()" onclick="applyTextColor('#eab308')"></div>
-                      <div class="color-btn" style="background: #22c55e" onmousedown="event.preventDefault()" onclick="applyTextColor('#22c55e')"></div>
-                      <div class="color-btn" style="background: #06b6d4" onmousedown="event.preventDefault()" onclick="applyTextColor('#06b6d4')"></div>
-                      <div class="color-btn" style="background: #3b82f6" onmousedown="event.preventDefault()" onclick="applyTextColor('#3b82f6')"></div>
-                      <div class="color-btn" style="background: #8b5cf6" onmousedown="event.preventDefault()" onclick="applyTextColor('#8b5cf6')"></div>
-                      <div class="color-btn" style="background: #ec4899" onmousedown="event.preventDefault()" onclick="applyTextColor('#ec4899')"></div>
+                    <div class="color-grid" id="fof-text-colors-grid">
+                      <div class="color-btn" style="background: #000000" data-color="#000000"></div>
+                      <div class="color-btn" style="background: #475569" data-color="#475569"></div>
+                      <div class="color-btn" style="background: #ef4444" data-color="#ef4444"></div>
+                      <div class="color-btn" style="background: #f97316" data-color="#f97316"></div>
+                      <div class="color-btn" style="background: #eab308" data-color="#eab308"></div>
+                      <div class="color-btn" style="background: #22c55e" data-color="#22c55e"></div>
+                      <div class="color-btn" style="background: #06b6d4" data-color="#06b6d4"></div>
+                      <div class="color-btn" style="background: #3b82f6" data-color="#3b82f6"></div>
+                      <div class="color-btn" style="background: #8b5cf6" data-color="#8b5cf6"></div>
+                      <div class="color-btn" style="background: #ec4899" data-color="#ec4899"></div>
                     </div>
-                    <button class="color-action-btn" onmousedown="event.preventDefault()" onclick="document.getElementById('native-color-input').click()">
+                    <button class="color-action-btn" id="fof-custom-color-btn">
                       <i class="fas fa-palette"></i> Custom Color
                     </button>
-                    <input type="color" id="native-color-input" class="native-color-picker" onchange="applyTextColor(this.value)" />
+                    <input type="color" id="fof-native-color-input" class="native-color-picker" />
                   </div>
                 </div>
 
-                <div class="dropdown-wrapper" id="hl-dropdown">
-                  <button class="tool-btn" onmousedown="event.preventDefault()" onclick="toggleDropdown('hl-dropdown')" title="Highlighter">
-                    <i class="fas fa-highlighter" id="hl-icon"></i>
+                <div class="dropdown-wrapper" id="fof-hl-dropdown">
+                  <button class="tool-btn fof-dd-btn" data-target="fof-hl-dropdown" title="Highlighter">
+                    <i class="fas fa-highlighter" id="fof-hl-icon"></i>
                     <i class="fas fa-caret-down" style="font-size: 12px"></i>
                   </button>
                   <div class="dropdown-menu color-panel">
-                    <div class="color-grid">
-                      <div class="color-btn" style="background: #ff9fae" onmousedown="event.preventDefault()" onclick="applyHighlight('#ff9fae')" title="Pink"></div>
-                      <div class="color-btn" style="background: #fde995" onmousedown="event.preventDefault()" onclick="applyHighlight('#fde995')" title="Yellow"></div>
-                      <div class="color-btn" style="background: #a6e1c5" onmousedown="event.preventDefault()" onclick="applyHighlight('#a6e1c5')" title="Green"></div>
-                      <div class="color-btn" style="background: #a7e0f6" onmousedown="event.preventDefault()" onclick="applyHighlight('#a7e0f6')" title="Blue"></div>
-                      <div class="color-btn" style="background: #e1a7fb" onmousedown="event.preventDefault()" onclick="applyHighlight('#e1a7fb')" title="Purple"></div>
+                    <div class="color-grid" id="fof-hl-colors-grid">
+                      <div class="color-btn" style="background: #ff9fae" data-color="#ff9fae" title="Pink"></div>
+                      <div class="color-btn" style="background: #fde995" data-color="#fde995" title="Yellow"></div>
+                      <div class="color-btn" style="background: #a6e1c5" data-color="#a6e1c5" title="Green"></div>
+                      <div class="color-btn" style="background: #a7e0f6" data-color="#a7e0f6" title="Blue"></div>
+                      <div class="color-btn" style="background: #e1a7fb" data-color="#e1a7fb" title="Purple"></div>
                     </div>
-                    <button class="color-action-btn" onmousedown="event.preventDefault()" onclick="applyHighlight('transparent')">
+                    <button class="color-action-btn" id="fof-clear-hl-btn">
                       <i class="fas fa-eraser"></i> Clear Highlight
                     </button>
                   </div>
@@ -286,51 +293,50 @@ class FOFcoEditor {
 
                 <div class="divider"></div>
 
-                <button class="tool-btn" id="btn-justifyLeft" onmousedown="event.preventDefault()" onclick="formatDoc('justifyLeft')"><i class="fas fa-align-left"></i></button>
-                <button class="tool-btn" id="btn-justifyCenter" onmousedown="event.preventDefault()" onclick="formatDoc('justifyCenter')"><i class="fas fa-align-center"></i></button>
-                <button class="tool-btn" id="btn-justifyRight" onmousedown="event.preventDefault()" onclick="formatDoc('justifyRight')"><i class="fas fa-align-right"></i></button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-justifyLeft" data-cmd="justifyLeft"><i class="fas fa-align-left"></i></button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-justifyCenter" data-cmd="justifyCenter"><i class="fas fa-align-center"></i></button>
+                <button class="tool-btn fof-format-btn" id="fof-btn-justifyRight" data-cmd="justifyRight"><i class="fas fa-align-right"></i></button>
 
                 <div class="divider"></div>
 
-                <button class="tool-btn" id="btn-insertOrderedList" onmousedown="event.preventDefault()" onclick="formatDoc('insertOrderedList')" title="Ordered List"><i class="fas fa-list-ol"></i></button>
-                <div class="dropdown-wrapper" id="list-dropdown">
-                  <button class="tool-btn" onmousedown="event.preventDefault()" onclick="toggleDropdown('list-dropdown')" title="Unordered List Types">
+                <button class="tool-btn fof-format-btn" id="fof-btn-insertOrderedList" data-cmd="insertOrderedList" title="Ordered List"><i class="fas fa-list-ol"></i></button>
+                <div class="dropdown-wrapper" id="fof-list-dropdown">
+                  <button class="tool-btn fof-dd-btn" data-target="fof-list-dropdown" title="Unordered List Types">
                     <i class="fas fa-list-ul"></i>
                     <i class="fas fa-caret-down" style="font-size: 12px"></i>
                   </button>
-                  <div class="dropdown-menu list-menu">
-                    <button onmousedown="event.preventDefault()" onclick="applyListStyle('disc')">&bull; Disc</button>
-                    <button onmousedown="event.preventDefault()" onclick="applyListStyle('circle')">&#9675; Circle</button>
-                    <button onmousedown="event.preventDefault()" onclick="applyListStyle('square')">&#9632; Square</button>
+                  <div class="dropdown-menu list-menu" id="fof-list-types">
+                    <button data-type="disc">&bull; Disc</button>
+                    <button data-type="circle">&#9675; Circle</button>
+                    <button data-type="square">&#9632; Square</button>
                   </div>
                 </div>
 
                 <div class="divider"></div>
 
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="ModalManager.openLink()" title="Link"><i class="fas fa-link"></i></button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="ModalManager.openMedia()" title="Image/Video"><i class="fas fa-image"></i></button>
+                <button class="tool-btn" id="fof-open-link-modal" title="Link"><i class="fas fa-link"></i></button>
+                <button class="tool-btn" id="fof-open-media-modal" title="Image/Video"><i class="fas fa-image"></i></button>
 
                 <div class="divider"></div>
 
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="formatDoc('formatBlock', 'BLOCKQUOTE')" title="Quote"><i class="fas fa-quote-right"></i></button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="insertCode()" title="Code Block"><i class="fas fa-code"></i></button>
-                <button class="tool-btn" onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')" title="Clear Format"><i class="fas fa-eraser"></i></button>
+                <button class="tool-btn fof-format-btn" data-cmd="formatBlock" data-val="BLOCKQUOTE" title="Quote"><i class="fas fa-quote-right"></i></button>
+                <button class="tool-btn" id="fof-btn-code" title="Code Block"><i class="fas fa-code"></i></button>
+                <button class="tool-btn fof-format-btn" data-cmd="removeFormat" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <div id="editor" class="editor-area" contenteditable="true" spellcheck="false"placeholder= "type here...">
-              </div>
+              <!-- 🔥 TRUE PLACEHOLDER HTML -->
+              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false" data-placeholder="Start typing..."></div>
             </div>
         </div>
         `;
     }
 
     injectLogic() {
-        // ফন্ট এবং ডিজাইনের লজিক যাতে ভেঙে না যায়, তাই 100% হুবহু তোমার ফাইলের JS এখানে ডাইরেক্ট ইমপ্লিমেন্ট করা হয়েছে
         if (document.getElementById('fofco-logic-script')) return;
         const script = document.createElement('script');
         script.id = 'fofco-logic-script';
         script.innerHTML = `
-            window.editor = document.getElementById("editor");
+            window.editor = document.getElementById("fof-editor");
             window.savedSelection = null;
 
             window.saveSelection = function() {
@@ -347,24 +353,24 @@ class FOFcoEditor {
             }
 
             window.ModalManager = {
-                openLink() { saveSelection(); document.getElementById("link-url-input").value = ""; document.getElementById("link-modal").classList.add("active"); setTimeout(() => document.getElementById("link-url-input").focus(), 100); },
-                applyLink() { restoreSelection(); const url = document.getElementById("link-url-input").value.trim(); if (url) formatDoc("createLink", url); this.close("link-modal"); },
-                removeLink() { restoreSelection(); formatDoc("unlink"); this.close("link-modal"); },
-                openMedia() { saveSelection(); document.getElementById("media-url-input").value = ""; document.getElementById("media-modal").classList.add("active"); },
-                applyMediaUrl() { restoreSelection(); const url = document.getElementById("media-url-input").value.trim(); if (url) formatDoc("insertHTML", \`<img src="\${url}" alt="media">\`); this.close("media-modal"); },
+                openLink() { saveSelection(); document.getElementById("fof-link-url-input").value = ""; document.getElementById("fof-link-modal").classList.add("active"); setTimeout(() => document.getElementById("fof-link-url-input").focus(), 100); },
+                applyLink() { restoreSelection(); const url = document.getElementById("fof-link-url-input").value.trim(); if (url) formatDoc("createLink", url); this.close("fof-link-modal"); },
+                removeLink() { restoreSelection(); formatDoc("unlink"); this.close("fof-link-modal"); },
+                openMedia() { saveSelection(); document.getElementById("fof-media-url-input").value = ""; document.getElementById("fof-media-modal").classList.add("active"); },
+                applyMediaUrl() { restoreSelection(); const url = document.getElementById("fof-media-url-input").value.trim(); if (url) formatDoc("insertHTML", \`<img src="\${url}" alt="media">\`); this.close("fof-media-modal"); },
                 handleFileInput(e) { const file = e.target.files[0]; if (file) this.processFile(file); },
                 processFile(file) {
                     restoreSelection(); const reader = new FileReader();
                     reader.onload = (ev) => {
                         const html = file.type.startsWith("image/") ? \`<img src="\${ev.target.result}" alt="local">\` : \`<video controls style="max-width:100%; border-radius: 8px;"><source src="\${ev.target.result}"></video>\`;
-                        formatDoc("insertHTML", html); this.close("media-modal");
+                        formatDoc("insertHTML", html); this.close("fof-media-modal");
                     };
                     reader.readAsDataURL(file);
                 },
                 close(id) { document.getElementById(id).classList.remove("active"); window.editor.focus(); }
             };
 
-            const mDropzone = document.getElementById("media-dropzone");
+            const mDropzone = document.getElementById("fof-media-dropzone");
             mDropzone.addEventListener("dragover", (e) => { e.preventDefault(); mDropzone.classList.add("drag-over"); });
             mDropzone.addEventListener("dragleave", () => mDropzone.classList.remove("drag-over"));
             mDropzone.addEventListener("drop", (e) => { e.preventDefault(); mDropzone.classList.remove("drag-over"); if (e.dataTransfer.files[0]) window.ModalManager.processFile(e.dataTransfer.files[0]); });
@@ -384,7 +390,7 @@ class FOFcoEditor {
             });
 
             window.formatDoc = function(cmd, value = null) { document.execCommand(cmd, false, value); window.editor.focus(); window.updateActiveStates(); }
-            window.applyFormat = function(tag, name) { formatDoc("formatBlock", tag); document.getElementById("active-format").innerText = name; closeAllDropdowns(); }
+            window.applyFormat = function(tag, name) { formatDoc("formatBlock", tag); document.getElementById("fof-active-format").innerText = name; closeAllDropdowns(); }
             window.applyDirectFontSize = function(px) {
                 if (!px) return; saveSelection(); restoreSelection();
                 document.execCommand("fontSize", false, "7");
@@ -392,14 +398,14 @@ class FOFcoEditor {
                 fonts.forEach((f) => { f.removeAttribute("size"); f.style.fontSize = px + "px"; });
             }
             window.changeFontSize = function(delta) {
-                const input = document.getElementById("font-size-input");
+                const input = document.getElementById("fof-font-size-input");
                 let currentSize = parseInt(input.value) || 16; let newSize = currentSize + delta; if (newSize < 1) newSize = 1;
                 input.value = newSize; applyDirectFontSize(newSize);
             }
-            window.applyTextColor = function(color) { formatDoc("foreColor", color); document.getElementById("color-icon").style.color = color; closeAllDropdowns(); }
+            window.applyTextColor = function(color) { formatDoc("foreColor", color); document.getElementById("fof-color-icon").style.color = color; closeAllDropdowns(); }
             window.applyHighlight = function(color) {
-                if (color === "transparent") { document.execCommand("backColor", false, "rgba(0,0,0,0)"); document.getElementById("hl-icon").style.color = "var(--text-muted)"; } 
-                else { document.execCommand("backColor", false, color); document.getElementById("hl-icon").style.color = color; }
+                if (color === "transparent") { document.execCommand("backColor", false, "rgba(0,0,0,0)"); document.getElementById("fof-hl-icon").style.color = "var(--text-muted)"; } 
+                else { document.execCommand("backColor", false, color); document.getElementById("fof-hl-icon").style.color = color; }
                 closeAllDropdowns();
             }
             window.applyOverline = function() {
@@ -416,31 +422,38 @@ class FOFcoEditor {
 
             const toggleBtns = ["bold", "italic", "underline", "strikeThrough", "justifyLeft", "justifyCenter", "justifyRight", "insertOrderedList"];
             window.updateActiveStates = function() {
-                toggleBtns.forEach((cmd) => { const btn = document.getElementById("btn-" + cmd); if (btn) { if (document.queryCommandState(cmd)) btn.classList.add("active"); else btn.classList.remove("active"); } });
+                toggleBtns.forEach((cmd) => { const btn = document.getElementById("fof-btn-" + cmd); if (btn) { if (document.queryCommandState(cmd)) btn.classList.add("active"); else btn.classList.remove("active"); } });
                 try {
                     const sel = window.getSelection();
                     if (sel.rangeCount > 0 && window.editor.contains(sel.anchorNode)) {
                         let node = sel.anchorNode; let parent = node.nodeType === 3 ? node.parentNode : node;
                         let computedSize = window.getComputedStyle(parent).fontSize;
-                        if (computedSize) document.getElementById("font-size-input").value = parseInt(computedSize);
+                        if (computedSize) document.getElementById("fof-font-size-input").value = parseInt(computedSize);
                     }
                 } catch (e) {}
             }
             window.editor.addEventListener("keyup", window.updateActiveStates);
             window.editor.addEventListener("mouseup", window.updateActiveStates);
+            
+            // Clean up br tags if empty for the perfect placeholder experience
+            window.editor.addEventListener("keyup", () => {
+                if (window.editor.innerHTML === '<br>' || window.editor.innerHTML === '<p><br></p>') {
+                    window.editor.innerHTML = '';
+                }
+            });
 
             window.FontManager = {
                 loaded: new Set(["Roboto", "Inter"]),
                 recent: JSON.parse(localStorage.getItem("editor_fonts")) || ["Roboto", "Open Sans"],
                 init() { this.recent.forEach((f) => this.loadCSS(f)); this.renderRecent(); },
                 async fetchFont() {
-                    let name = document.getElementById("font-input").value.trim(); if (!name) return;
+                    let name = document.getElementById("fof-font-input").value.trim(); if (!name) return;
                     name = name.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
                     if (this.loaded.has(name) || this.recent.includes(name)) { this.apply(name); return; }
                     try {
                         const url = \`https://fonts.googleapis.com/css2?family=\${name.replace(/ /g, "+")}:wght@400;600&display=swap\`;
                         const res = await fetch(url, { method: "HEAD" });
-                        if (res.ok) { this.loadCSS(name, url); this.apply(name); document.getElementById("font-input").value = ""; } 
+                        if (res.ok) { this.loadCSS(name, url); this.apply(name); document.getElementById("fof-font-input").value = ""; } 
                         else alert(\`Font "\${name}" not found.\`);
                     } catch (e) { console.error(e); }
                 },
@@ -451,11 +464,11 @@ class FOFcoEditor {
                 },
                 apply(name) {
                     saveSelection(); restoreSelection(); this.loadCSS(name);
-                    document.getElementById("active-font").innerText = name; formatDoc("fontName", name); closeAllDropdowns();
+                    document.getElementById("fof-active-font").innerText = name; formatDoc("fontName", name); closeAllDropdowns();
                     if (!this.recent.includes(name)) { this.recent.unshift(name); if (this.recent.length > 8) this.recent.pop(); localStorage.setItem("editor_fonts", JSON.stringify(this.recent)); this.renderRecent(); }
                 },
                 renderRecent() {
-                    const box = document.getElementById("recent-fonts"); box.innerHTML = "";
+                    const box = document.getElementById("fof-recent-fonts"); box.innerHTML = "";
                     this.recent.forEach((font) => {
                         const div = document.createElement("div"); div.className = "font-item"; div.innerText = font; div.style.fontFamily = font;
                         div.onmouseenter = () => this.loadCSS(font); div.onmousedown = (e) => { e.preventDefault(); this.apply(font); };
@@ -465,7 +478,7 @@ class FOFcoEditor {
             };
 
             window.ImgManager = {
-                selected: null, toolbar: document.getElementById("img-toolbar"), resizer: document.getElementById("img-resizer"), isDragging: false, startX: 0, startW: 0,
+                selected: null, toolbar: document.getElementById("fof-img-toolbar"), resizer: document.getElementById("fof-img-resizer"), isDragging: false, startX: 0, startW: 0,
                 init() {
                     window.editor.addEventListener("click", (e) => { if (e.target.tagName === "IMG") this.select(e.target); else this.deselect(); });
                     this.resizer.addEventListener("mousedown", (e) => { this.isDragging = true; this.startX = e.clientX; this.startW = this.selected.clientWidth; e.preventDefault(); });
@@ -525,11 +538,6 @@ class FOFcoEditor {
                 },
             };
 
-            window.editor.addEventListener("paste", (e) => {
-                e.preventDefault(); const text = (e.originalEvent || e).clipboardData.getData("text/plain");
-                document.execCommand("insertHTML", false, text.replace(/\\n/g, "<br>"));
-            });
-
             window.closeAllDropdowns = function() { document.querySelectorAll(".dropdown-wrapper").forEach((el) => el.classList.remove("active")); }
             window.toggleDropdown = function(id) { const target = document.getElementById(id); const isActive = target.classList.contains("active"); window.closeAllDropdowns(); if (!isActive) target.classList.add("active"); }
 
@@ -539,10 +547,46 @@ class FOFcoEditor {
             window.FontManager.init();
             window.ImgManager.init();
             window.LatexEngine.init();
+            
+            // Buttons logic inside injectLogic to run dynamically
+            document.querySelector('#fof-font-search-btn').onclick = window.FontManager.fetchFont;
+            document.querySelector('#fof-font-input').onkeypress = (e) => { if (e.key === 'Enter') window.FontManager.fetchFont(); };
+            
+            document.querySelectorAll('#fof-format-list button').forEach(b => { b.onclick = () => window.applyFormat(b.dataset.tag, b.dataset.name); });
+            document.querySelectorAll('#fof-text-colors-grid .color-btn').forEach(b => { b.onclick = () => window.applyTextColor(b.dataset.color); });
+            document.querySelector('#fof-custom-color-btn').onclick = () => document.getElementById('fof-native-color-input').click();
+            document.querySelector('#fof-native-color-input').onchange = (e) => window.applyTextColor(e.target.value);
+            
+            document.querySelectorAll('#fof-hl-colors-grid .color-btn').forEach(b => { b.onclick = () => window.applyHighlight(b.dataset.color); });
+            document.querySelector('#fof-clear-hl-btn').onclick = () => window.applyHighlight('transparent');
+            
+            document.querySelectorAll('#fof-list-types button').forEach(b => { b.onclick = () => window.applyListStyle(b.dataset.type); });
+            
+            document.querySelectorAll('.fof-format-btn').forEach(btn => { btn.onclick = () => window.formatDoc(btn.dataset.cmd, btn.dataset.val); });
+            
+            document.querySelector('#fof-btn-overline').onclick = window.applyOverline;
+            document.querySelector('#fof-btn-code').onclick = window.insertCode;
+            
+            document.querySelectorAll('.fof-dd-btn').forEach(btn => { btn.onclick = () => window.toggleDropdown(btn.dataset.target); });
+            
+            document.querySelector('#fof-open-link-modal').onclick = window.ModalManager.openLink;
+            document.querySelector('#fof-close-link-btn').onclick = () => window.ModalManager.close('fof-link-modal');
+            document.querySelector('#fof-remove-link').onclick = window.ModalManager.removeLink;
+            document.querySelector('#fof-apply-link').onclick = window.ModalManager.applyLink;
+            
+            document.querySelector('#fof-open-media-modal').onclick = window.ModalManager.openMedia;
+            document.querySelector('#fof-close-media-btn').onclick = () => window.ModalManager.close('fof-media-modal');
+            document.querySelector('#fof-apply-media').onclick = window.ModalManager.applyMediaUrl;
+            
+            document.querySelector('#fof-size-dec').onclick = () => window.changeFontSize(-1);
+            document.querySelector('#fof-size-inc').onclick = () => window.changeFontSize(1);
+            document.querySelector('#fof-font-size-input').onchange = (e) => window.applyDirectFontSize(e.target.value);
+            
+            document.querySelectorAll('#fof-img-toolbar button').forEach(b => { b.onclick = () => window.ImgManager.align(b.dataset.align); });
+            
         `;
         document.body.appendChild(script);
     }
 }
 
-// Global Export
 window.FOFcoEditor = FOFcoEditor;
