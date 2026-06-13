@@ -317,8 +317,7 @@ class FOFcoEditor {
                 <button class="tool-btn" onmousedown="event.preventDefault()" onclick="formatDoc('removeFormat')" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <div id="editor" class="editor-area" contenteditable="true" spellcheck="false">
-                <p>Start typing in your FOFcoEditor here...</p>
+              <div id="editor" class="editor-area" contenteditable="true" spellcheck="false"placeholder= "type here...">
               </div>
             </div>
         </div>
