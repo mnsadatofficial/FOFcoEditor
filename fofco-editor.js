@@ -108,7 +108,7 @@ class FOFcoEditor {
             
             .fofco-wrapper .editor-area { min-height: 550px; padding: 40px 60px; outline: none; line-height: 1.7; font-size: 16px; overflow-y: auto; color: #1e293b; }
             
-            /* 🔥 TRUE PLACEHOLDER CSS */
+            /* 🔥 THE REAL PLACEHOLDER CSS */
             .fofco-wrapper .editor-area:empty::before {
                 content: attr(data-placeholder);
                 color: #94a3b8;
@@ -324,8 +324,8 @@ class FOFcoEditor {
                 <button class="tool-btn fof-format-btn" data-cmd="removeFormat" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <!-- 🔥 TRUE PLACEHOLDER HTML -->
-              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false" data-placeholder="Start typing..."></div>
+              <!-- 🔥 FIX: Completely Empty Editor Area with data-placeholder -->
+              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false" data-placeholder="Start typing in your FOFcoEditor here..."></div>
             </div>
         </div>
         `;
@@ -435,10 +435,10 @@ class FOFcoEditor {
             window.editor.addEventListener("keyup", window.updateActiveStates);
             window.editor.addEventListener("mouseup", window.updateActiveStates);
             
-            // Clean up br tags if empty for the perfect placeholder experience
-            window.editor.addEventListener("keyup", () => {
-                if (window.editor.innerHTML === '<br>' || window.editor.innerHTML === '<p><br></p>') {
-                    window.editor.innerHTML = '';
+            // Clean up empty editor logic for true placeholder support
+            window.editor.addEventListener("input", function() {
+                if (this.innerHTML === '<br>' || this.innerHTML === '<p><br></p>') {
+                    this.innerHTML = '';
                 }
             });
 
@@ -548,7 +548,7 @@ class FOFcoEditor {
             window.ImgManager.init();
             window.LatexEngine.init();
             
-            // Buttons logic inside injectLogic to run dynamically
+            // Buttons logic
             document.querySelector('#fof-font-search-btn').onclick = window.FontManager.fetchFont;
             document.querySelector('#fof-font-input').onkeypress = (e) => { if (e.key === 'Enter') window.FontManager.fetchFont(); };
             
@@ -583,7 +583,6 @@ class FOFcoEditor {
             document.querySelector('#fof-font-size-input').onchange = (e) => window.applyDirectFontSize(e.target.value);
             
             document.querySelectorAll('#fof-img-toolbar button').forEach(b => { b.onclick = () => window.ImgManager.align(b.dataset.align); });
-            
         `;
         document.body.appendChild(script);
     }
