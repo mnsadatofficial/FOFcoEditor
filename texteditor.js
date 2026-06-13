@@ -313,7 +313,7 @@ class FOFcoEditor {
                 <button class="tool-btn fof-format-btn" data-cmd="removeFormat" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false"><p><br></p></div>
+              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false"></div>
             </div>
         </div>
         `;
@@ -374,6 +374,14 @@ class FOFcoEditor {
                     else if (e.rangeParent) { range = document.createRange(); range.setStart(e.rangeParent, e.rangeOffset); }
                     const sel = window.getSelection(); sel.removeAllRanges(); if (range) sel.addRange(range);
                     saveSelection(); window.ModalManager.processFile(file);
+                }
+            });
+
+            // 🔥 FIX 1: Tab for Nested Lists
+            window.editor.addEventListener("keydown", (e) => {
+                if (e.key === "Tab") {
+                    e.preventDefault();
+                    document.execCommand(e.shiftKey ? "outdent" : "indent", false, null);
                 }
             });
 
@@ -484,6 +492,7 @@ class FOFcoEditor {
                 },
             };
 
+            // 🔥 FIX 2: Bulletproof LaTeX Engine without crashing regex
             window.LatexEngine = {
                 init() {
                     window.editor.addEventListener("keyup", (e) => { if (e.key === " " || e.key === "Enter") this.renderSafely(); });
@@ -502,16 +511,38 @@ class FOFcoEditor {
                     const range = sel.getRangeAt(0);
                     const marker = document.createElement("span"); const markerId = "caret-" + Math.random().toString(36).substr(2, 9); marker.id = markerId;
                     range.insertNode(marker);
+                    
                     let content = window.editor.innerHTML;
-                    content = content.replace(/(?<!\$)\$\$([^\$]+?)\$\$(?!\$)/g, (match, tex) => { if (tex.includes(markerId)) return match; return this.compile(tex, true) || match; });
-                    content = content.replace(/(?<!\$)\$([^\$]+?)\$(?!\$)/g, (match, tex) => { if (tex.includes(markerId)) return match; return this.compile(tex, false) || match; });
+                    
+                    // Safe regex without lookbehinds (works everywhere)
+                    content = content.replace(/\\$\\$([\\s\\S]+?)\\$\\$/g, (match, tex) => { 
+                        if (tex.includes(markerId)) return match; 
+                        return this.compile(tex, true) || match; 
+                    });
+                    
+                    content = content.replace(/\\$([^\\$]+?)\\$/g, (match, tex) => { 
+                        if (tex.includes(markerId)) return match; 
+                        return this.compile(tex, false) || match; 
+                    });
+                    
                     window.editor.innerHTML = content;
+                    
                     const restoredMarker = document.getElementById(markerId);
-                    if (restoredMarker) { const newRange = document.createRange(); newRange.setStartAfter(restoredMarker); newRange.collapse(true); sel.removeAllRanges(); sel.addRange(newRange); restoredMarker.remove(); }
+                    if (restoredMarker) { 
+                        const newRange = document.createRange(); 
+                        newRange.setStartAfter(restoredMarker); 
+                        newRange.collapse(true); 
+                        sel.removeAllRanges(); 
+                        sel.addRange(newRange); 
+                        restoredMarker.remove(); 
+                    }
                 },
                 compile(tex, display) {
                     try {
-                        let cleanTex = tex.replace(/<span id="caret-.*?"><\\/span>/g, "").trim();
+                        let cleanTex = tex.replace(/<span id="caret-.*?"><\\/span>/g, "");
+                        cleanTex = cleanTex.replace(/<[^>]+>/g, ''); // Strip all HTML tags
+                        cleanTex = cleanTex.replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim();
+                        
                         const html = katex.renderToString(cleanTex, { displayMode: display, throwOnError: false });
                         const modeClass = display ? "block-math" : "inline-math";
                         return \`<span class="latex-node \${modeClass}" contenteditable="false" data-tex="\${cleanTex}">\${html}</span>\`;
@@ -564,6 +595,14 @@ class FOFcoEditor {
             document.querySelector('#fof-font-size-input').onchange = (e) => window.applyDirectFontSize(e.target.value);
             
             document.querySelectorAll('#fof-img-toolbar button').forEach(b => { b.onclick = () => window.ImgManager.align(b.dataset.align); });
+
+            // 🔥 FIX 3: Paste korleo LaTeX automatic render hobe
+            window.editor.addEventListener("paste", (e) => {
+                e.preventDefault();
+                const text = (e.originalEvent || e).clipboardData.getData("text/plain");
+                document.execCommand("insertHTML", false, text.replace(/\\n/g, "<br>"));
+                setTimeout(() => window.LatexEngine.renderSafely(), 100);
+            });
         `;
         document.body.appendChild(script);
     }
