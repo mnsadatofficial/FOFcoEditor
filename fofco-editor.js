@@ -12,7 +12,6 @@ class FOFcoEditor {
         this.injectDependencies();
         this.injectCSS();
         this.injectHTML();
-        
         setTimeout(() => {
             this.injectLogic();
         }, 150);
@@ -25,12 +24,10 @@ class FOFcoEditor {
             "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css",
             "https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
         ];
-        
         links.forEach(href => {
             if (!document.querySelector(`link[href="${href}"]`)) {
                 const link = document.createElement('link');
-                link.rel = 'stylesheet'; 
-                link.href = href;
+                link.rel = 'stylesheet'; link.href = href;
                 if(href.includes('font-awesome')) link.setAttribute('crossorigin', 'anonymous');
                 head.appendChild(link);
             }
@@ -110,15 +107,6 @@ class FOFcoEditor {
             .fofco-wrapper .native-color-picker { opacity: 0; position: absolute; width: 0; height: 0; pointer-events: none; }
             
             .fofco-wrapper .editor-area { min-height: 550px; padding: 40px 60px; outline: none; line-height: 1.7; font-size: 16px; overflow-y: auto; color: #1e293b; }
-            
-            /* 🔥 TRUE PLACEHOLDER CSS */
-            .fofco-wrapper .editor-area:empty::before {
-                content: attr(data-placeholder);
-                color: #94a3b8;
-                pointer-events: none;
-                display: block;
-            }
-
             .fofco-wrapper .editor-area ul, .fofco-wrapper .editor-area ol { margin-left: 35px !important; padding-left: 5px !important; margin-bottom: 1em; }
             .fofco-wrapper .editor-area li { margin-bottom: 8px; }
             .fofco-wrapper .editor-area h1, .fofco-wrapper .editor-area h2, .fofco-wrapper .editor-area h3, .fofco-wrapper .editor-area h4 { font-weight: 600; color: #0f172a; margin: 1.2em 0 0.5em 0; }
@@ -325,7 +313,7 @@ class FOFcoEditor {
                 <button class="tool-btn fof-format-btn" data-cmd="removeFormat" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false"></div>
+              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false"><p><br></p></div>
             </div>
         </div>
         `;
@@ -434,14 +422,6 @@ class FOFcoEditor {
             }
             window.editor.addEventListener("keyup", window.updateActiveStates);
             window.editor.addEventListener("mouseup", window.updateActiveStates);
-            
-            // 🔥 FIX: Empty space cleaner to support the real placeholder
-            window.editor.addEventListener("input", function() {
-                let content = this.innerHTML.trim();
-                if (content === '<br>' || content === '<p><br></p>' || content === '') {
-                    this.innerHTML = '';
-                }
-            });
 
             window.FontManager = {
                 loaded: new Set(["Roboto", "Inter"]),
