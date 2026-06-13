@@ -108,14 +108,6 @@ class FOFcoEditor {
             
             .fofco-wrapper .editor-area { min-height: 550px; padding: 40px 60px; outline: none; line-height: 1.7; font-size: 16px; overflow-y: auto; color: #1e293b; }
             
-            /* 🔥 THE REAL PLACEHOLDER CSS */
-            .fofco-wrapper .editor-area:empty::before {
-                content: attr(data-placeholder);
-                color: #94a3b8;
-                pointer-events: none;
-                display: block;
-            }
-
             .fofco-wrapper .editor-area ul, .fofco-wrapper .editor-area ol { margin-left: 35px !important; padding-left: 5px !important; margin-bottom: 1em; }
             .fofco-wrapper .editor-area li { margin-bottom: 8px; }
             .fofco-wrapper .editor-area h1, .fofco-wrapper .editor-area h2, .fofco-wrapper .editor-area h3, .fofco-wrapper .editor-area h4 { font-weight: 600; color: #0f172a; margin: 1.2em 0 0.5em 0; }
@@ -324,8 +316,8 @@ class FOFcoEditor {
                 <button class="tool-btn fof-format-btn" data-cmd="removeFormat" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <!-- 🔥 FIX: Completely Empty Editor Area with data-placeholder -->
-              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false" data-placeholder="Start typing in your FOFcoEditor here..."></div>
+              <!-- Completely empty editor area -->
+              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false"></div>
             </div>
         </div>
         `;
@@ -435,13 +427,6 @@ class FOFcoEditor {
             window.editor.addEventListener("keyup", window.updateActiveStates);
             window.editor.addEventListener("mouseup", window.updateActiveStates);
             
-            // Clean up empty editor logic for true placeholder support
-            window.editor.addEventListener("input", function() {
-                if (this.innerHTML === '<br>' || this.innerHTML === '<p><br></p>') {
-                    this.innerHTML = '';
-                }
-            });
-
             window.FontManager = {
                 loaded: new Set(["Roboto", "Inter"]),
                 recent: JSON.parse(localStorage.getItem("editor_fonts")) || ["Roboto", "Open Sans"],
