@@ -325,7 +325,7 @@ class FOFcoEditor {
                 <button class="tool-btn fof-format-btn" data-cmd="removeFormat" title="Clear Format"><i class="fas fa-eraser"></i></button>
               </div>
 
-              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false" data-placeholder="Start typing in your FOFcoEditor here..."></div>
+              <div id="fof-editor" class="editor-area" contenteditable="true" spellcheck="false"></div>
             </div>
         </div>
         `;
